@@ -1,0 +1,45 @@
+name: Dependency Update Bot auto-approve
+on:
+  workflow_call:
+    inputs:
+      auto_approve:
+        type: boolean
+        required: true
+        default: true
+      auto_merge:
+        type: boolean
+        required: true
+        default: true
+  pull_request:
+jobs:
+  auto-actions:
+    if: (github.actor == 'dependabot[bot]') || (github.actor == 'renovate[bot]')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Dependabot metadata
+        if: github.actor == 'dependabot[bot]'
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - uses: actions/checkout@v4
+        if: github.event_name != 'workflow_call' || inputs.auto_approve
+      - name: Auto approve the PRif not already approved
+        if: github.event_name != 'workflow_call' || inputs.auto_approve
+        run: |
+          gh pr checkout "$PR_URL" # sets the upstream metadata for `gh pr status`
+          if [ "$(gh pr status --json reviewDecision -q .currentBranch.reviewDecision)" != "APPROVED" ];
+          then gh pr review --approve "$PR_URL"
+          else echo "PR already approved, skipping additional approvals to minimize emails/notification noise.";
+          fi
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Auto merge the PR
+        if: github.event_name != 'workflow_call' || inputs.auto_merge
+        run: gh pr merge -s --auto "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

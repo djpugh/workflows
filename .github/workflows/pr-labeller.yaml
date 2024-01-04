@@ -1,0 +1,20 @@
+name: PR Labeller
+on:
+  workflow_call:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  pr-labeler:
+    if: startsWith(github.ref_name, 'refs/pull')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      # Uses autolabeller functionality
+      - uses: release-drafter/release-drafter@v5.25.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          disable-releaser: true

@@ -1,0 +1,22 @@
+name: Sync labels
+on:
+  schedule:
+    - cron:  0 1 * * 1
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      label-file:
+        type: string
+        default: https://raw.githubusercontent.com/djpugh/.github/main/labels.yml
+
+jobs:
+  sync:
+    permissions:
+      issues: write
+    name: Run label sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EndBug/label-sync@v2
+        with:
+          config-file: ${{github.event_name != 'workflow_call' && 'https://raw.githubusercontent.com/djpugh/.github/main/labels.yml' ||inputs.label-file}}

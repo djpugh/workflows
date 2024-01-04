@@ -1,0 +1,12 @@
+{
+    "extends": [
+        "config:base",
+        ":preserveSemverRanges"
+    ],
+    "labels": ["chore"],
+    "packageRules": [
+        {
+        "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+        }
+    ]
+}
